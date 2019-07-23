@@ -32,7 +32,7 @@ public class BorrowerService {
 	private BranchDAO branchDAO;
 	
 	@Autowired
-	private BookCopyService copyService;
+	private BookCopyDAO copyDAO;
 
 	@Transactional
 	public ResponseEntity<Borrower> loginBorrower(Integer cardNo) {
@@ -49,7 +49,7 @@ public class BorrowerService {
 
 	@Transactional
 	public ResponseEntity<List<BookCopies>> getAllAvailableBooksAtBranch(Integer branchId) {
-		Optional<List<BookCopies>> bookList = copyService.getAvailableBooksFromBranch(branchId);
+		Optional<List<BookCopies>> bookList = copyDAO.getAvailableBooksFromBranch(branchId);
 		
 		return bookList.isPresent() ? new ResponseEntity<List<BookCopies>>(bookList.get(), HttpStatus.OK)
 				: new ResponseEntity<List<BookCopies>>(HttpStatus.NOT_FOUND);
@@ -70,11 +70,12 @@ public class BorrowerService {
 		Integer bookId = bookLoan.getBookLoanId().getBook().getBookId();
 		Integer branchId = bookLoan.getBookLoanId().getBranch().getBranchId();
 		
-		copyService.removeACopy(bookId,branchId);
+		copyDAO.removeACopy(bookId,branchId);
 				
 		return new ResponseEntity<BookLoan>(bookLoan, HttpStatus.CREATED);	
 	}
 	
+	@Transactional
 	public ResponseEntity<BookLoan> returnBook(BookLoan bookLoan){
 		boolean alreadyCheckedOut = loanDAO.existsById(bookLoan.getBookLoanId());
 		
@@ -86,7 +87,7 @@ public class BorrowerService {
 		Integer branchId = bookLoan.getBookLoanId().getBranch().getBranchId();
 		
 		loanDAO.deleteById(bookLoan.getBookLoanId());
-		copyService.addACopy(bookId, branchId);
+		copyDAO.addACopy(bookId, branchId);
 		
 		return new ResponseEntity<BookLoan>(HttpStatus.OK);
 	}
