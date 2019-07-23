@@ -46,7 +46,7 @@ public class BorrowerController {
 		return borrService.getAllAvailableBooksAtBranch(branchId);
 	}
 	
-	@PostMapping(value = "/checkoutBook")
+	@PostMapping(value = "/checkoutBook", consumes = { Const.XML, Const.JSON }, produces = { Const.XML, Const.JSON })
 	public ResponseEntity<BookLoan> checkOutBook(@RequestBody BookLoan bookLoan){
 		if(bookLoan.getBookLoanId() == null || bookLoan.getBookLoanId().getBook() == null
 				|| bookLoan.getBookLoanId().getBorrower() == null || bookLoan.getBookLoanId().getBranch() == null) {
@@ -57,7 +57,7 @@ public class BorrowerController {
 		}	
 	}
 	
-	@PutMapping(value = "/checkoutBook")
+	@PutMapping(value = "/checkoutBook", consumes = { Const.XML, Const.JSON }, produces = { Const.XML, Const.JSON })
 	public ResponseEntity<BookLoan> returnBook(@RequestBody BookLoan bookLoan){
 		if(bookLoan.getBookLoanId() == null || bookLoan.getBookLoanId().getBook() == null
 				|| bookLoan.getBookLoanId().getBorrower() == null || bookLoan.getBookLoanId().getBranch() == null) {
