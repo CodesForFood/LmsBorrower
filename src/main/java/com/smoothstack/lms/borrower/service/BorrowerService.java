@@ -1,5 +1,6 @@
 package com.smoothstack.lms.borrower.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,6 +15,7 @@ import com.smoothstack.lms.borrower.dao.BookLoanDAO;
 import com.smoothstack.lms.borrower.dao.BorrowerDAO;
 import com.smoothstack.lms.borrower.dao.BranchDAO;
 import com.smoothstack.lms.borrower.entity.BookCopies;
+import com.smoothstack.lms.borrower.entity.BookLoan;
 import com.smoothstack.lms.borrower.entity.Borrower;
 import com.smoothstack.lms.borrower.entity.LibraryBranch;
 
@@ -30,7 +32,7 @@ public class BorrowerService {
 	private BranchDAO branchDAO;
 	
 	@Autowired
-	private BookCopyDAO copyDAO;
+	private BookCopyService copyService;
 
 	@Transactional
 	public ResponseEntity<Borrower> loginBorrower(Integer cardNo) {
@@ -47,10 +49,46 @@ public class BorrowerService {
 
 	@Transactional
 	public ResponseEntity<List<BookCopies>> getAllAvailableBooksAtBranch(Integer branchId) {
-		Optional<List<BookCopies>> bookList = copyDAO.getAvailableBooksFromBranch(branchId);
+		Optional<List<BookCopies>> bookList = copyService.getAvailableBooksFromBranch(branchId);
 		
 		return bookList.isPresent() ? new ResponseEntity<List<BookCopies>>(bookList.get(), HttpStatus.OK)
 				: new ResponseEntity<List<BookCopies>>(HttpStatus.NOT_FOUND);
+	}
+
+	@Transactional
+	public ResponseEntity<BookLoan> checkOutBook(BookLoan bookLoan) {
+		boolean alreadyCheckedOut = loanDAO.existsById(bookLoan.getBookLoanId());
+		
+		if(alreadyCheckedOut) {
+			return new ResponseEntity<BookLoan>(HttpStatus.BAD_REQUEST);
+		}
+		
+		bookLoan.setDateOut(LocalDateTime.now());
+		bookLoan.setDueDate(LocalDateTime.now().plusDays(7));
+		loanDAO.save(bookLoan);
+				
+		Integer bookId = bookLoan.getBookLoanId().getBook().getBookId();
+		Integer branchId = bookLoan.getBookLoanId().getBranch().getBranchId();
+		
+		copyService.removeACopy(bookId,branchId);
+				
+		return new ResponseEntity<BookLoan>(bookLoan, HttpStatus.CREATED);	
+	}
+	
+	public ResponseEntity<BookLoan> returnBook(BookLoan bookLoan){
+		boolean alreadyCheckedOut = loanDAO.existsById(bookLoan.getBookLoanId());
+		
+		if(!alreadyCheckedOut) {
+			return new ResponseEntity<BookLoan>(HttpStatus.BAD_REQUEST);
+		}
+		
+		Integer bookId = bookLoan.getBookLoanId().getBook().getBookId();
+		Integer branchId = bookLoan.getBookLoanId().getBranch().getBranchId();
+		
+		loanDAO.deleteById(bookLoan.getBookLoanId());
+		copyService.addACopy(bookId, branchId);
+		
+		return new ResponseEntity<BookLoan>(HttpStatus.OK);
 	}
 	
 	

@@ -10,12 +10,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.smoothstack.lms.borrower.Const;
 import com.smoothstack.lms.borrower.entity.BookCopies;
+import com.smoothstack.lms.borrower.entity.BookLoan;
 import com.smoothstack.lms.borrower.entity.Borrower;
 import com.smoothstack.lms.borrower.entity.LibraryBranch;
 import com.smoothstack.lms.borrower.service.BorrowerService;
@@ -44,6 +46,25 @@ public class BorrowerController {
 		return borrService.getAllAvailableBooksAtBranch(branchId);
 	}
 	
+	@PostMapping(value = "/checkoutBook")
+	public ResponseEntity<BookLoan> checkOutBook(@RequestBody BookLoan bookLoan){
+		if(bookLoan.getBookLoanId() == null || bookLoan.getBookLoanId().getBook() == null
+				|| bookLoan.getBookLoanId().getBorrower() == null || bookLoan.getBookLoanId().getBranch() == null) {
+			return new ResponseEntity<BookLoan>(HttpStatus.BAD_REQUEST);
+		}
+		else {
+			return borrService.checkOutBook(bookLoan);	
+		}	
+	}
 	
-	
+	@PutMapping(value = "/checkoutBook")
+	public ResponseEntity<BookLoan> returnBook(@RequestBody BookLoan bookLoan){
+		if(bookLoan.getBookLoanId() == null || bookLoan.getBookLoanId().getBook() == null
+				|| bookLoan.getBookLoanId().getBorrower() == null || bookLoan.getBookLoanId().getBranch() == null) {
+			return new ResponseEntity<BookLoan>(HttpStatus.BAD_REQUEST);
+		}
+		else {
+			return borrService.returnBook(bookLoan);	
+		}
+	}
 }
